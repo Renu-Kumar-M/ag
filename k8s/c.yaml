@@ -1,0 +1,127 @@
+# ==========================================
+# STAGE 1: PREREQUISITES & INSTALLATION CHECKS
+# ==========================================
+
+# Check software versions
+git --version
+python --version
+docker --version
+
+# Verify Docker engine is running
+docker info
+
+# Verify Kubernetes context and cluster state
+kubectl version --client
+kubectl get nodes
+
+# ==========================================
+# STAGE 2: LOCAL PYTHON ENVIRONMENT & TESTING
+# ==========================================
+
+# Create the Python virtual environment
+python -m venv .venv
+
+# Activate the virtual environment (Windows PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Alternative: Activate the virtual environment (Git Bash / Linux)
+# source .venv/Scripts/activate
+
+# Install application dependencies from requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# Run the automated unit tests using pytest
+.\.venv\Scripts\python.exe -m pytest -v
+
+# Boot up the local Flask web development server (Port 5000)
+.\.venv\Scripts\python.exe app.py
+
+# ==========================================
+# STAGE 3: LOCAL DOCKER CONTAINERIZATION
+# ==========================================
+
+# Build the Docker image (Make sure to include the trailing dot)
+docker build -t student-k8s-demo:v1 .
+
+# List all local images to verify it exists
+docker images
+
+# Run the container locally (Maps host port 5000 to container port 5000)
+docker run --rm -d --name student-demo -p 5000:5000 student-k8s-demo:v1
+
+# Check if the container is running actively
+docker ps
+
+# Inspect application print outputs inside the container
+docker logs student-demo
+
+# Stop and remove the running container
+docker stop student-demo
+
+# ==========================================
+# STAGE 4: GIT & INITIAL GITHUB REPOSITORY PUSH
+# ==========================================
+
+# Initialize a new local Git repository
+git init
+
+# Stage all files for tracking
+git add .
+
+# Save the staged code snapshot locally
+git commit -m "Initial Flask application and Docker setup"
+
+# Rename the default primary development branch to main
+git branch -M main
+
+# Link the local folder to your remote GitHub repository
+# (Replace YOUR_USERNAME with your actual GitHub username)
+git remote add origin https://github.com
+
+# Push the initial codebase up to GitHub
+git push -u origin main
+
+# ==========================================
+# STAGE 5: RUNNING KUBERNETES MANIFESTS
+# ==========================================
+
+# Verify you are pointing to the local cluster context
+kubectl config current-context
+kubectl get nodes
+
+# Apply the Deployment manifest to launch Pods
+kubectl apply -f k8s/deployment.yaml
+
+# Apply the Service manifest to expose network ports
+kubectl apply -f k8s/service.yaml
+
+# Track the progress of the deployment rollout
+kubectl rollout status deployment/student-k8s-demo
+
+# Inspect the status of your controllers, pods, and networks
+kubectl get deployments
+kubectl get pods
+kubectl get services
+
+# ==========================================
+# STAGE 6: UPDATES & TROUBLESHOOTING UTILITIES
+# ==========================================
+
+# Force update a new image tag to trigger a rolling update
+# (Replace placeholders with your username and the new Commit SHA)
+kubectl set image deployment/student-k8s-demo student-k8s-demo=YOUR_USERNAME/student-k8s-demo:NEW_SHA
+
+# Track the rolling update progress
+kubectl rollout status deployment/student-k8s-demo
+
+# Global view of all active cluster objects
+kubectl get all
+
+# In-depth debugging configurations and events for the deployment
+kubectl describe deployment student-k8s-demo
+
+# View aggregated logs from your running cluster application
+kubectl logs deployment/student-k8s-demo
+
+# View chronological cluster events sorted by creation time
+kubectl get events --sort-by=.metadata.creationTimestamp
